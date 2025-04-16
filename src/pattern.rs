@@ -434,6 +434,18 @@ pub(crate) fn apply_pat<L: Language, A: Analysis<L>>(
     *ids.last().unwrap()
 }
 
+impl<L:Language> Pattern<L>{
+    /// apply a [Subst] in a [Pattern]. It returns the corresponding (possibly new) [Id]
+    pub fn apply_susbt<A:Analysis<L>>(
+        &self, 
+        egraph: &mut EGraph<L, A>,
+        subst: &Subst,
+    ) -> Id {
+        let mut id_buf = vec![0.into(); self.ast.len()];
+        apply_pat(&mut id_buf, &self.ast, egraph, subst)
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
