@@ -1,8 +1,9 @@
-use std::fmt;
+use std::{fmt, iter::FromIterator};
 use std::str::FromStr;
 
 use crate::*;
 use fmt::{Debug, Display, Formatter};
+use itertools::Itertools;
 use thiserror::Error;
 
 /// A variable for use in [`Pattern`]s or [`Subst`]s.
@@ -127,6 +128,22 @@ impl Subst {
             .iter()
             .find_map(|(v, id)| if *v == var { Some(id) } else { None })
     }
+
+    /// Get the length of the substitution
+    pub fn len(&self) -> usize {
+        self.vec.len()
+    }
+
+    /// Wether the substitution is empty (i.e., doesn't bind any variables)
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.vec.is_empty()
+    }
+
+    /// Iterate over the substitution
+    pub fn iter(&self) -> impl Iterator<Item = (&Var, Id)> {
+        self.vec.iter().map(|(a, b)| (a, *b))
+    }
 }
 
 impl std::ops::Index<Var> for Subst {
@@ -152,6 +169,12 @@ impl Debug for Subst {
             }
         }
         write!(f, "}}")
+    }
+}
+
+impl FromIterator<(Var, Id)> for Subst {
+    fn from_iter<T: IntoIterator<Item = (Var, Id)>>(iter: T) -> Self {
+        Self { vec: iter.into_iter().unique_by(|(x, _)| *x).collect() }
     }
 }
 
