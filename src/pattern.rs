@@ -99,6 +99,17 @@ impl<L: Language> PatternAst<L> {
 
         new
     }
+
+    /// apply a [Subst] in a [Pattern]. It returns the corresponding (possibly new) [Id]
+    pub fn apply_susbt<A:Analysis<L>>(
+        &self, 
+        egraph: &mut EGraph<L, A>,
+        subst: &Subst,
+    ) -> Id {
+        let mut id_buf = vec![0.into(); self.len()];
+        apply_pat(&mut id_buf, self, egraph, subst)
+    }
+
 }
 
 impl<L: Language> Pattern<L> {
@@ -441,8 +452,7 @@ impl<L:Language> Pattern<L>{
         egraph: &mut EGraph<L, A>,
         subst: &Subst,
     ) -> Id {
-        let mut id_buf = vec![0.into(); self.ast.len()];
-        apply_pat(&mut id_buf, &self.ast, egraph, subst)
+        self.ast.apply_susbt(egraph, subst)
     }
 }
 
