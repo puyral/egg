@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -174,11 +175,12 @@ impl<L: Language, A: Analysis<L>> Applier<L, A> for MultiPattern<L> {
                 for (i, (v, p)) in self.asts.iter().enumerate() {
                     id_buf.resize(p.len(), 0.into());
                     let id1 = crate::pattern::apply_pat(&mut id_buf, p, egraph, &subst);
+
                     if let Some(id2) = subst.insert(*v, id1) {
-                        egraph.union(id1, id2);
-                    }
-                    if i == 0 {
-                        added.push(id1)
+                        let did_something = egraph.union(id1, id2);
+                        if did_something {
+                            added.push(id2);
+                        }
                     }
                 }
             }
