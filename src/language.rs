@@ -380,7 +380,7 @@ impl LanguageChildren for Id {
 /// [`serde::Serialize`](https://docs.rs/serde/latest/serde/trait.Serialize.html).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RecExpr<L> {
-    nodes: Vec<L>,
+    pub(crate) nodes: Vec<L>,
 }
 
 #[cfg(feature = "serde-1")]
@@ -511,6 +511,13 @@ impl<L: Language> RecExpr<L> {
     /// Get the root node of this expression. When adding a new node via `add`, it becomes the new root.
     pub fn root(&self) -> Id {
         self.ids().last().unwrap()
+    }
+
+    /// Iterate over *all* appearing [Id]s in this expression
+    /// 
+    /// (usefull to shift things arround for instance)
+    pub fn all_ids_mut(&mut self) -> impl Iterator<Item = &mut Id> {
+        self.iter_mut().flat_map(|fun| fun.children_mut())
     }
 }
 

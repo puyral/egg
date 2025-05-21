@@ -101,15 +101,45 @@ impl<L: Language> PatternAst<L> {
     }
 
     /// apply a [Subst] in a [Pattern]. It returns the corresponding (possibly new) [Id]
-    pub fn apply_susbt<A:Analysis<L>>(
-        &self, 
-        egraph: &mut EGraph<L, A>,
-        subst: &Subst,
-    ) -> Id {
+    pub fn apply_susbt<A: Analysis<L>>(&self, egraph: &mut EGraph<L, A>, subst: &Subst) -> Id {
         let mut id_buf = vec![0.into(); self.len()];
         apply_pat(&mut id_buf, self, egraph, subst)
     }
 
+    /// apply a substition (i.e., a map from [Var] back to [PatternAst]) to `self`
+    pub fn apply_pattern_subst(mut self, subst: Vec<(Var, Self)>) -> Self {
+        // prepare
+        let capacity = self.len() + subst.iter().map(|(_, patt)| patt.len() - 1).sum::<usize>();
+        let mut ret = Vec::with_capacity(capacity);
+
+        // insert the "new" terms at the begining, keep track of their index in `ret`
+        let subst = subst
+            .into_iter()
+            .map(|(var, mut patt)| {
+                // shift `patt` by the current length of `ret`
+                patt.all_ids_mut()
+                    .for_each(|id| *id = Id::from(usize::from(*id) + ret.len()));
+                // keep the top let function
+                let head = patt.nodes.pop().unwrap(); // a RecExp cannot be empty
+                // add it to `ret`
+                ret.extend(patt);
+                (var, head)
+            })
+            .collect::<Vec<_>>();
+
+        // we update 'self' so that each variables in `subst` points to the right Id of `ret`
+        for (_, l) in self.items_mut() {
+            if let ENodeOrVar::Var(v) = l {
+                if let Some((_, head)) = subst.iter().find(|(v2, _)| v == v2) {
+                    *l = head.clone();
+                }
+            }
+        }
+
+        ret.extend(self);
+
+        ret.into()
+    }
 }
 
 impl<L: Language> Pattern<L> {
@@ -445,13 +475,9 @@ pub(crate) fn apply_pat<L: Language, A: Analysis<L>>(
     *ids.last().unwrap()
 }
 
-impl<L:Language> Pattern<L>{
+impl<L: Language> Pattern<L> {
     /// apply a [Subst] in a [Pattern]. It returns the corresponding (possibly new) [Id]
-    pub fn apply_susbt<A:Analysis<L>>(
-        &self, 
-        egraph: &mut EGraph<L, A>,
-        subst: &Subst,
-    ) -> Id {
+    pub fn apply_susbt<A: Analysis<L>>(&self, egraph: &mut EGraph<L, A>, subst: &Subst) -> Id {
         self.ast.apply_susbt(egraph, subst)
     }
 }
