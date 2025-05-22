@@ -1,5 +1,5 @@
-use std::{fmt, iter::FromIterator};
 use std::str::FromStr;
+use std::{fmt, iter::FromIterator};
 
 use crate::*;
 use fmt::{Debug, Display, Formatter};
@@ -38,6 +38,21 @@ impl Var {
             _ => None,
         }
     }
+
+    /// Exposes the content of a variable
+    pub fn expose(&self) -> VarExposed {
+        match self.0 {
+            VarInner::Sym(global_symbol) => VarExposed::Sym(global_symbol.as_str()),
+            VarInner::Num(n) => VarExposed::Num(n),
+        }
+    }
+}
+
+/// An enum to expose how a variable was built (with a `str` or a number)
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VarExposed {
+    Sym(&'static str),
+    Num(u32),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -174,7 +189,9 @@ impl Debug for Subst {
 
 impl FromIterator<(Var, Id)> for Subst {
     fn from_iter<T: IntoIterator<Item = (Var, Id)>>(iter: T) -> Self {
-        Self { vec: iter.into_iter().unique_by(|(x, _)| *x).collect() }
+        Self {
+            vec: iter.into_iter().unique_by(|(x, _)| *x).collect(),
+        }
     }
 }
 

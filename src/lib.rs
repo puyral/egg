@@ -101,7 +101,7 @@ pub use {
     pattern::{ENodeOrVar, Pattern, PatternAst, SearchMatches},
     rewrite::{Applier, Condition, ConditionEqual, ConditionalApplier, Rewrite, Searcher},
     run::*,
-    subst::{Subst, Var},
+    subst::{Subst, Var, VarExposed},
     util::*,
 };
 
