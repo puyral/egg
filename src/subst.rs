@@ -13,6 +13,7 @@ use thiserror::Error;
 ///
 /// [`FromStr`]: std::str::FromStr
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde-1", derive(serde::Serialize, serde::Deserialize))]
 pub struct Var(VarInner);
 
 impl Var {
@@ -56,6 +57,7 @@ pub enum VarExposed {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde-1", derive(serde::Serialize, serde::Deserialize))]
 enum VarInner {
     Sym(Symbol),
     Num(u32),

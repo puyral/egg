@@ -174,6 +174,7 @@ impl<L: Language + Display> Pattern<L> {
 /// The language of [`Pattern`]s.
 ///
 #[derive(Debug, Hash, PartialEq, Eq, Clone, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde-1", derive(serde::Serialize, serde::Deserialize))]
 pub enum ENodeOrVar<L> {
     /// An enode from the underlying [`Language`]
     ENode(L),
