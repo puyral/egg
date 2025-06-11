@@ -61,6 +61,12 @@ mod util;
 #[cfg_attr(feature = "serde-1", serde(transparent))]
 pub struct Id(u32);
 
+impl Id {
+    pub const fn new_const(i:u32) -> Self {
+        Self(i)
+    }
+}
+
 impl From<usize> for Id {
     fn from(n: usize) -> Id {
         Id(n as u32)

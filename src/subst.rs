@@ -28,8 +28,13 @@ impl Var {
     /// assert_eq!(Var::from(12), "?#12".parse().unwrap());
     /// assert_eq!(Var::from_u32(12), "?#12".parse().unwrap());
     /// ```
-    pub fn from_u32(num: u32) -> Self {
+    pub const fn from_u32(num: u32) -> Self {
         Var(VarInner::Num(num))
+    }
+
+    /// build a variable from a symbol. This doesn't check that said symbol makes sense
+    pub fn from_symbol(s: Symbol) -> Self {
+        Var(VarInner::Sym(s))
     }
 
     /// If this variable was created from a u32, get it back out.
