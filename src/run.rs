@@ -353,6 +353,24 @@ where
         }
     }
 
+    /// Create a new `Runner` with the given egraph and default parameters.
+    pub fn new_with_egraph(egraph: EGraph<L, N>) -> Self {
+        Self {
+            limits: RunnerLimits {
+                iter_limit: 30,
+                node_limit: 10_000,
+                time_limit: Duration::from_secs(5),
+                start_time: None,
+            },
+            egraph,
+            roots: vec![],
+            iterations: vec![],
+            stop_reason: None,
+            hooks: vec![],
+            scheduler: Box::new(BackoffScheduler::default()),
+        }
+    }
+
     /// Sets the iteration limit. Default: 30
     pub fn with_iter_limit(mut self, iter_limit: usize) -> Self {
         self.limits.iter_limit = iter_limit;
