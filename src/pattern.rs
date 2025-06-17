@@ -107,37 +107,51 @@ impl<L: Language> PatternAst<L> {
     }
 
     /// apply a substition (i.e., a map from [Var] back to [PatternAst]) to `self`
-    pub fn apply_pattern_subst(mut self, subst: Vec<(Var, Self)>) -> Self {
+    pub fn apply_pattern_subst(self, subst: Vec<(Var, Self)>) -> Self {
+        // insert the "new" terms at the begining, keep track of their index in `ret`
+
         // prepare
-        let capacity = self.len() + subst.iter().map(|(_, patt)| patt.len() - 1).sum::<usize>();
+        let capacity = self.len() + subst.iter().map(|(_, patt)| patt.len()).sum::<usize>();
         let mut ret = Vec::with_capacity(capacity);
 
-        // insert the "new" terms at the begining, keep track of their index in `ret`
-        let subst = subst
-            .into_iter()
-            .map(|(var, mut patt)| {
-                // shift `patt` by the current length of `ret`
-                patt.all_ids_mut()
-                    .for_each(|id| *id = Id::from(usize::from(*id) + ret.len()));
-                // keep the top let function
-                let head = patt.nodes.pop().unwrap(); // a RecExp cannot be empty
-                // add it to `ret`
-                ret.extend(patt);
-                (var, head)
-            })
-            .collect::<Vec<_>>();
+        // to keep what the variables will be replaced with
+        let mut idx_map = HashMap::with_capacity_and_hasher(subst.len(), Default::default());
 
-        // we update 'self' so that each variables in `subst` points to the right Id of `ret`
-        for (_, l) in self.items_mut() {
-            if let ENodeOrVar::Var(v) = l {
-                if let Some((_, head)) = subst.iter().find(|(v2, _)| v == v2) {
-                    *l = head.clone();
+        // insert at the begining
+        for (var, arg) in subst {
+            let n = ret.len();
+            ret.extend(arg.nodes);
+
+            // update the offset
+            for e in &mut ret[n..] {
+                if let ENodeOrVar::ENode(fun) = e {
+                    fun.update_children(|id| (usize::from(id) + n).into())
+                }
+            }
+            // the head is actually used in place of the variables
+            let head = ret.pop().unwrap();
+            idx_map.insert(var, head);
+        }
+
+        {
+            // we do the same thing with `self` but we substitue the variables
+            // as well using `idx_map`
+            let n = ret.len();
+            ret.extend(self.nodes);
+
+            for e in &mut ret[n..] {
+                match e {
+                    ENodeOrVar::ENode(fun) => {
+                        fun.update_children(|id| (usize::from(id) + n).into())
+                    }
+                    ENodeOrVar::Var(v) => {
+                        if let Some(head) = idx_map.get(v) {
+                            *e = head.clone()
+                        }
+                    }
                 }
             }
         }
-
-        ret.extend(self);
-
         ret.into()
     }
 }
