@@ -61,6 +61,26 @@ pub enum VarExposed {
     Num(u32),
 }
 
+impl VarExposed {
+    #[must_use]
+    pub fn try_into_sym(self) -> Result<&'static str, Self> {
+        if let Self::Sym(v) = self {
+            Ok(v)
+        } else {
+            Err(self)
+        }
+    }
+
+    #[must_use]
+    pub fn try_into_num(self) -> Result<u32, Self> {
+        if let Self::Num(v) = self {
+            Ok(v)
+        } else {
+            Err(self)
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde-1", derive(serde::Serialize, serde::Deserialize))]
 enum VarInner {
